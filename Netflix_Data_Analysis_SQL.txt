@@ -1,0 +1,144 @@
+mysql> show tables;
++-------------------+
+| Tables_in_netflix |
++-------------------+
+| genres            |
+| mytable           |
+| netflix_titles    |
++-------------------+
+3 rows in set (0.01 sec)
+
+mysql> describe netflix_titles;
++--------------+--------------+------+-----+---------+-------+
+| Field        | Type         | Null | Key | Default | Extra |
++--------------+--------------+------+-----+---------+-------+
+| show_id      | varchar(10)  | NO   | PRI | NULL    |       |
+| type         | varchar(20)  | YES  |     | NULL    |       |
+| title        | varchar(255) | YES  |     | NULL    |       |
+| director     | varchar(255) | YES  |     | NULL    |       |
+| cast         | text         | YES  |     | NULL    |       |
+| country      | varchar(100) | YES  |     | NULL    |       |
+| date_added   | date         | YES  |     | NULL    |       |
+| release_year | int          | YES  |     | NULL    |       |
+| rating       | varchar(10)  | YES  |     | NULL    |       |
+| duration     | varchar(20)  | YES  |     | NULL    |       |
+| listed_in    | text         | YES  |     | NULL    |       |
+| description  | text         | YES  |     | NULL    |       |
++--------------+--------------+------+-----+---------+-------+
+12 rows in set (0.01 sec)
+
+mysql> SELECT title, release_year FROM netflix_titles WHERE release_year > 2018 ORDER BY release_year DESC LIMIT 5;
++----------------------+--------------+
+| title                | release_year |
++----------------------+--------------+
+| Searching For Sheela |         2021 |
+| The Starling         |         2021 |
+| On the Verge         |         2021 |
+| Stowaway             |         2021 |
+| Zero                 |         2021 |
++----------------------+--------------+
+5 rows in set (0.01 sec)
+
+mysql> SELECT type, COUNT(*) AS total FROM netflix_titles GROUP BY type LIMIT 5;
++---------+-------+
+| type    | total |
++---------+-------+
+| Movie   |  6129 |
+| TV Show |  2676 |
++---------+-------+
+2 rows in set (0.02 sec)
+
+mysql> CREATE TABLE genres ( genre_name VARCHAR(100) PRIMARY KEY ); INSERT INTO genres (genre_name) VALUES ('Dramas'), ('Comedies'), ('Action'), ('Documentaries'), ('International TV Shows');
+ERROR 1050 (42S01): Table 'genres' already exists
+ERROR 1062 (23000): Duplicate entry 'Dramas' for key 'genres.PRIMARY'
+mysql> SELECT n.title, g.genre_name FROM netflix_titles n INNER JOIN genres g ON n.listed_in LIKE CONCAT('%', g.genre_name, '%') LIMIT 5;
++----------------------+---------------+
+| title                | genre_name    |
++----------------------+---------------+
+| Dick Johnson Is Dead | Documentaries |
+| The Starling         | Dramas        |
+| The Starling         | Comedies      |
+| On the Verge         | Dramas        |
+| On the Verge         | Comedies      |
++----------------------+---------------+
+5 rows in set (0.00 sec)
+
+mysql> SELECT country, COUNT(*) AS total FROM netflix_titles WHERE country IS NOT NULL GROUP BY country ORDER BY total DESC LIMIT 5;
++----------------+-------+
+| country        | total |
++----------------+-------+
+| United States  |  2818 |
+| India          |   972 |
+| United Kingdom |   419 |
+| Japan          |   245 |
+| South Korea    |   199 |
++----------------+-------+
+5 rows in set (0.02 sec)
+
+mysql> SELECT type, AVG(release_year) AS avg_release_year FROM netflix_titles GROUP BY type;
++---------+------------------+
+| type    | avg_release_year |
++---------+------------------+
+| Movie   |        2013.1207 |
+| TV Show |        2016.6058 |
++---------+------------------+
+2 rows in set (0.04 sec)
+
+mysql> CREATE VIEW recent_movies AS SELECT title, release_year FROM netflix_titles WHERE type = 'Movie' AND release_year >= 2020 LIMIT 10;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> SELECT * FROM recent_movies LIMIT 10;
++-------------------------------------+--------------+
+| title                               | release_year |
++-------------------------------------+--------------+
+| Dick Johnson Is Dead                |         2020 |
+| The Starling                        |         2021 |
+| Stowaway                            |         2021 |
+| Wild Dog                            |         2020 |
+| Tell Me When                        |         2021 |
+| Rudra: Secret of the Black Moon     |         2020 |
+| Untold: Breaking Point              |         2021 |
+| Ajeeb Daastaans                     |         2021 |
+| Arlo the Alligator Boy              |         2021 |
+| Barbie & Chelsea: The Lost Birthday |         2021 |
++-------------------------------------+--------------+
+10 rows in set (0.01 sec)
+
+mysql> CREATE INDEX idx_country ON netflix_titles(country);
+Query OK, 0 rows affected (0.16 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> CREATE INDEX idx_release_year ON netflix_titles(release_year);
+Query OK, 0 rows affected (0.12 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> SELECT * FROM netflix_titles WHERE country = 'India' LIMIT 5;
++---------+-------+-----------------------------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+------------+--------------+--------+----------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| show_id | type  | title                       | director                       | cast                                                                                                                                                                        | country | date_added | release_year | rating | duration | listed_in                                          | description                                                                                                                                            |
++---------+-------+-----------------------------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+------------+--------------+--------+----------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| s1017   | Movie | Delhi Belly                 | Abhinay Deo                    | Imran Khan, Vir Das, Kunaal Roy Kapur, Poorna Jagannathan, Shenaz Treasury, Vijay Raaz, Paresh Ganatra, Rahul Singh                                                         | India   | 2021-04-17 |         2011 | TV-MA  | 101 min  | Action & Adventure, Comedies, International Movies | Three flatmates get involved in the shady business belonging to one roomie's fiancé, and discover that a global crime syndicate is gunning for them.  |
+| s1018   | Movie | Dhobi Ghat (Mumbai Diaries) | Kiran Rao                      | Aamir Khan, Monica Dogra, Kriti Malhotra, Prateik Babbar, Aasha Pawar, Jyoti Pawar, Norma Lobo, Kitu Gidwani, Danish Husain, Jehan Manekshaw                                | India   | 2021-04-17 |         2010 | TV-MA  | 102 min  | Dramas, International Movies                       | In this intimate drama, circumstances draw together four people from different castes – which would normally preclude them from forming friendships. |
+| s1019   | Movie | Jaane Tu... Ya Jaane Na     | Abbas Tyrewala                 | Imran Khan, Genelia D'Souza, Manjari Fadnis, Ayaz Khan, Prateik Babbar, Ratna Pathak Shah, Arbaaz Khan, Sohail Khan                                                         | India   | 2021-04-17 |         2008 | TV-14  | 147 min  | Comedies, International Movies, Music & Musicals   | Soft-spoken Jai and spitfire beauty Aditi couldn't be more different – but their family and friends know that they're a perfect match.               |
+| s1021   | Movie | Madness in the Desert       | Satyajit Bhatkal               | Aamir Khan, Ashutosh Gowariker                                                                                                                                              | India   | 2021-04-17 |         2004 | TV-14  | 141 min  | Documentaries, International Movies                | The story of making "Lagaan," one of the millennium's seminal Indian films, is told from the point of view of production team member Satyajit Bhatkal. |
+| s1022   | Movie | Peepli Live                 | Anusha Rizvi, Mahmood Farooqui | Omkar Das Manikpuri, Raghuvir Yadav, Malaika Shenoy, Nawazuddin Siddiqui, Naseeruddin Shah, Sitaram Panchal, Shalini Vatsa, Farrukh Jaffar, Aamir Bashir, Vishal Om Prakash | India   | 2021-04-17 |         2010 | TV-MA  | 109 min  | Comedies, Dramas, Independent Movies               | Two indigent farmers consider suicide so that their families can collect a government subsidy that's paid to the relatives of deceased farmers.        |
++---------+-------+-----------------------------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+------------+--------------+--------+----------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+5 rows in set (0.01 sec)
+
+mysql> EXPLAIN SELECT * FROM netflix_titles WHERE country = 'India' LIMIT 2;
++----+-------------+----------------+------------+------+---------------+-------------+---------+-------+------+----------+-------+
+| id | select_type | table          | partitions | type | possible_keys | key         | key_len | ref   | rows | filtered | Extra |
++----+-------------+----------------+------------+------+---------------+-------------+---------+-------+------+----------+-------+
+|  1 | SIMPLE      | netflix_titles | NULL       | ref  | idx_country   | idx_country | 403     | const |  972 |   100.00 | NULL  |
++----+-------------+----------------+------------+------+---------------+-------------+---------+-------+------+----------+-------+
+1 row in set, 1 warning (0.01 sec)
+
+mysql> SELECT * FROM netflix_titles WHERE country = 'India' LIMIT 2;
++---------+-------+-----------------------------+-------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------+------------+--------------+--------+----------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| show_id | type  | title                       | director    | cast                                                                                                                                         | country | date_added | release_year | rating | duration | listed_in                                          | description                                                                                                                                            |
++---------+-------+-----------------------------+-------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------+------------+--------------+--------+----------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+| s1017   | Movie | Delhi Belly                 | Abhinay Deo | Imran Khan, Vir Das, Kunaal Roy Kapur, Poorna Jagannathan, Shenaz Treasury, Vijay Raaz, Paresh Ganatra, Rahul Singh                          | India   | 2021-04-17 |         2011 | TV-MA  | 101 min  | Action & Adventure, Comedies, International Movies | Three flatmates get involved in the shady business belonging to one roomie's fiancé, and discover that a global crime syndicate is gunning for them.  |
+| s1018   | Movie | Dhobi Ghat (Mumbai Diaries) | Kiran Rao   | Aamir Khan, Monica Dogra, Kriti Malhotra, Prateik Babbar, Aasha Pawar, Jyoti Pawar, Norma Lobo, Kitu Gidwani, Danish Husain, Jehan Manekshaw | India   | 2021-04-17 |         2010 | TV-MA  | 102 min  | Dramas, International Movies                       | In this intimate drama, circumstances draw together four people from different castes – which would normally preclude them from forming friendships. |
++---------+-------+-----------------------------+-------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------+------------+--------------+--------+----------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+
+2 rows in set (0.00 sec)
+
+mysql> notee
